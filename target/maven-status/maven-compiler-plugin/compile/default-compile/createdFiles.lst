@@ -1,0 +1,7 @@
+com/pokemonbattle/service/PokemonService.class
+com/pokemonbattle/PokemonBattleApplication.class
+com/pokemonbattle/repository/PokemonRepository.class
+com/pokemonbattle/model/Pokemon.class
+com/pokemonbattle/controller/PokemonController.class
+com/pokemonbattle/model/BattleResult.class
+com/pokemonbattle/config/DataInitializer.class

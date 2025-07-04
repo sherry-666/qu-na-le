@@ -1,0 +1,7 @@
+/workspace/src/main/java/com/pokemonbattle/repository/PokemonRepository.java
+/workspace/src/main/java/com/pokemonbattle/model/BattleResult.java
+/workspace/src/main/java/com/pokemonbattle/controller/PokemonController.java
+/workspace/src/main/java/com/pokemonbattle/model/Pokemon.java
+/workspace/src/main/java/com/pokemonbattle/config/DataInitializer.java
+/workspace/src/main/java/com/pokemonbattle/service/PokemonService.java
+/workspace/src/main/java/com/pokemonbattle/PokemonBattleApplication.java

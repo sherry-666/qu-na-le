@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pokemon Battle - Fight!</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #ff9a56 0%, #ff6b95 100%);
+            min-height: 100vh;
+            font-family: 'Arial', sans-serif;
+        }
+        .battle-arena {
+            background: rgba(255,255,255,0.95);
+            border-radius: 20px;
+            padding: 30px;
+            margin: 20px 0;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        }
+        .pokemon-display {
+            text-align: center;
+            padding: 20px;
+            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+            border-radius: 15px;
+            margin: 10px;
+            transition: all 0.3s;
+        }
+        .pokemon-display.attacking {
+            animation: shake 0.5s;
+            background: linear-gradient(135deg, #ff6b6b, #ffa8a8);
+        }
+        .pokemon-display.defending {
+            animation: flash 0.5s;
+            background: linear-gradient(135deg, #74b9ff, #a8d8ff);
+        }
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+        @keyframes flash {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+        .hp-bar {
+            background: #e9ecef;
+            border-radius: 10px;
+            height: 20px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+        .hp-fill {
+            background: linear-gradient(90deg, #20bf6b, #26de81);
+            height: 100%;
+            transition: width 0.5s ease;
+            border-radius: 10px;
+        }
+        .hp-fill.low {
+            background: linear-gradient(90deg, #ff6b6b, #ff5252);
+        }
+        .hp-fill.medium {
+            background: linear-gradient(90deg, #ffb142, #ff9500);
+        }
+        .move-btn {
+            margin: 5px;
+            border-radius: 15px;
+            padding: 10px 20px;
+            border: none;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+        .move-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+        .battle-log {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 20px;
+            height: 300px;
+            overflow-y: auto;
+            border: 2px solid #dee2e6;
+        }
+        .log-message {
+            padding: 10px;
+            margin: 5px 0;
+            border-radius: 10px;
+            background: white;
+            border-left: 4px solid #667eea;
+            animation: slideIn 0.3s ease;
+        }
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .winner-banner {
+            background: linear-gradient(45deg, #ff6b6b, #ffa8a8);
+            color: white;
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+            margin: 20px 0;
+            font-size: 1.5em;
+            font-weight: bold;
+            animation: bounce 1s infinite;
+        }
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+        .control-btn {
+            margin: 10px;
+            padding: 15px 30px;
+            border-radius: 25px;
+            border: none;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+        .heal-btn {
+            background: linear-gradient(45deg, #20bf6b, #26de81);
+            color: white;
+        }
+        .reset-btn {
+            background: linear-gradient(45deg, #3742fa, #5352ed);
+            color: white;
+        }
+        .back-btn {
+            background: linear-gradient(45deg, #747d8c, #57606f);
+            color: white;
+        }
+        .control-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="battle-arena">
+            <h1 class="text-center mb-4">
+                <i class="fas fa-fire"></i> Pokemon Battle Arena <i class="fas fa-fire"></i>
+            </h1>
+            
+            <div id="winnerBanner" class="winner-banner d-none">
+                <i class="fas fa-trophy"></i> <span id="winnerText"></span> Wins! <i class="fas fa-trophy"></i>
+            </div>
+            
+            <div class="row">
+                <div class="col-md-5">
+                    <div id="pokemon1Display" class="pokemon-display">
+                        <h4 th:text="${pokemon1.name}">Pokemon 1</h4>
+                        <img th:src="${pokemon1.imageUrl}" th:alt="${pokemon1.name}" 
+                             class="img-fluid mb-3" style="height: 150px;">
+                        <div class="hp-bar">
+                            <div id="hp1" class="hp-fill" style="width: 100%"></div>
+                        </div>
+                        <div id="hpText1" th:text="${pokemon1.hp} + '/' + ${pokemon1.maxHp}">HP</div>
+                        <div class="mt-3">
+                            <span class="badge bg-primary" th:text="${pokemon1.type}">Type</span>
+                        </div>
+                    </div>
+                    
+                    <div class="text-center mt-3">
+                        <h5>Choose Move:</h5>
+                        <div id="moves1">
+                            <button th:each="move : ${pokemon1.moves}" 
+                                    class="move-btn"
+                                    th:text="${move}"
+                                    th:onclick="'attack(' + ${pokemon1.id} + ', ' + ${pokemon2.id} + ', \'' + ${move} + '\')'">
+                                Move
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-2 text-center d-flex align-items-center justify-content-center">
+                    <h2 class="text-primary">VS</h2>
+                </div>
+                
+                <div class="col-md-5">
+                    <div id="pokemon2Display" class="pokemon-display">
+                        <h4 th:text="${pokemon2.name}">Pokemon 2</h4>
+                        <img th:src="${pokemon2.imageUrl}" th:alt="${pokemon2.name}" 
+                             class="img-fluid mb-3" style="height: 150px;">
+                        <div class="hp-bar">
+                            <div id="hp2" class="hp-fill" style="width: 100%"></div>
+                        </div>
+                        <div id="hpText2" th:text="${pokemon2.hp} + '/' + ${pokemon2.maxHp}">HP</div>
+                        <div class="mt-3">
+                            <span class="badge bg-primary" th:text="${pokemon2.type}">Type</span>
+                        </div>
+                    </div>
+                    
+                    <div class="text-center mt-3">
+                        <h5>Choose Move:</h5>
+                        <div id="moves2">
+                            <button th:each="move : ${pokemon2.moves}" 
+                                    class="move-btn"
+                                    th:text="${move}"
+                                    th:onclick="'attack(' + ${pokemon2.id} + ', ' + ${pokemon1.id} + ', \'' + ${move} + '\')'">
+                                Move
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="row mt-4">
+                <div class="col-12">
+                    <h5>Battle Log:</h5>
+                    <div id="battleLog" class="battle-log">
+                        <div class="log-message">Battle started! Choose your moves!</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="text-center mt-4">
+                <button class="control-btn heal-btn" onclick="healAll()">
+                    <i class="fas fa-heart"></i> Heal All
+                </button>
+                <button class="control-btn reset-btn" onclick="resetBattle()">
+                    <i class="fas fa-redo"></i> Reset Battle
+                </button>
+                <button class="control-btn back-btn" onclick="goHome()">
+                    <i class="fas fa-home"></i> Back to Selection
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script th:inline="javascript">
+        const pokemon1Id = /*[[${pokemon1.id}]]*/ 1;
+        const pokemon2Id = /*[[${pokemon2.id}]]*/ 2;
+        const pokemon1MaxHp = /*[[${pokemon1.maxHp}]]*/ 100;
+        const pokemon2MaxHp = /*[[${pokemon2.maxHp}]]*/ 100;
+        
+        let battleEnded = false;
+        
+        function attack(attackerId, defenderId, move) {
+            if (battleEnded) return;
+            
+            // Add visual effects
+            const attackerDisplay = document.getElementById(attackerId === pokemon1Id ? 'pokemon1Display' : 'pokemon2Display');
+            const defenderDisplay = document.getElementById(attackerId === pokemon1Id ? 'pokemon2Display' : 'pokemon1Display');
+            
+            attackerDisplay.classList.add('attacking');
+            defenderDisplay.classList.add('defending');
+            
+            setTimeout(() => {
+                attackerDisplay.classList.remove('attacking');
+                defenderDisplay.classList.remove('defending');
+            }, 500);
+            
+            fetch('/api/battle', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: `attackerId=${attackerId}&defenderId=${defenderId}&move=${move}`
+            })
+            .then(response => response.json())
+            .then(data => {
+                addLogMessage(data.message);
+                updatePokemonHP(defenderId, data.defender.hp);
+                
+                if (data.battleEnded) {
+                    battleEnded = true;
+                    showWinner(data.winner);
+                    disableAllMoves();
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                addLogMessage('An error occurred during battle!');
+            });
+        }
+        
+        function updatePokemonHP(pokemonId, newHp) {
+            const isP1 = pokemonId === pokemon1Id;
+            const hpBar = document.getElementById(isP1 ? 'hp1' : 'hp2');
+            const hpText = document.getElementById(isP1 ? 'hpText1' : 'hpText2');
+            const maxHp = isP1 ? pokemon1MaxHp : pokemon2MaxHp;
+            
+            const percentage = (newHp / maxHp) * 100;
+            hpBar.style.width = percentage + '%';
+            hpText.textContent = newHp + '/' + maxHp;
+            
+            // Update HP bar color
+            hpBar.classList.remove('low', 'medium');
+            if (percentage < 25) {
+                hpBar.classList.add('low');
+            } else if (percentage < 50) {
+                hpBar.classList.add('medium');
+            }
+        }
+        
+        function addLogMessage(message) {
+            const battleLog = document.getElementById('battleLog');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'log-message';
+            messageDiv.textContent = message;
+            battleLog.appendChild(messageDiv);
+            battleLog.scrollTop = battleLog.scrollHeight;
+        }
+        
+        function showWinner(winner) {
+            const banner = document.getElementById('winnerBanner');
+            const winnerText = document.getElementById('winnerText');
+            winnerText.textContent = winner;
+            banner.classList.remove('d-none');
+        }
+        
+        function disableAllMoves() {
+            const moveButtons = document.querySelectorAll('.move-btn');
+            moveButtons.forEach(btn => {
+                btn.disabled = true;
+                btn.style.opacity = '0.5';
+            });
+        }
+        
+        function enableAllMoves() {
+            const moveButtons = document.querySelectorAll('.move-btn');
+            moveButtons.forEach(btn => {
+                btn.disabled = false;
+                btn.style.opacity = '1';
+            });
+        }
+        
+        function healAll() {
+            Promise.all([
+                fetch(`/api/pokemon/${pokemon1Id}/heal`, { method: 'POST' }),
+                fetch(`/api/pokemon/${pokemon2Id}/heal`, { method: 'POST' })
+            ])
+            .then(responses => Promise.all(responses.map(r => r.json())))
+            .then(data => {
+                updatePokemonHP(pokemon1Id, data[0].hp);
+                updatePokemonHP(pokemon2Id, data[1].hp);
+                addLogMessage('Both Pokemon have been healed to full HP!');
+                battleEnded = false;
+                enableAllMoves();
+                document.getElementById('winnerBanner').classList.add('d-none');
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                addLogMessage('Error healing Pokemon!');
+            });
+        }
+        
+        function resetBattle() {
+            location.reload();
+        }
+        
+        function goHome() {
+            window.location.href = '/';
+        }
+    </script>
+</body>
+</html>
